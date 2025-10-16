@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
+import logo from "@/assets/reelestate-logo.png";
 
 export const Hero = () => {
   return (
@@ -16,6 +17,8 @@ export const Hero = () => {
       {/* Content */}
       <div className="container relative z-10">
         <div className="max-w-3xl space-y-8">
+          <img src={logo} alt="ReelEstate" className="h-20 w-auto mb-4 drop-shadow-lg" />
+          
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-sm font-medium">AI Destekli Video Üretimi</span>

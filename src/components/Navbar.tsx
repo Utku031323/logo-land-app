@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Menu, User } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import logo from "@/assets/reelestate-logo.png";
 
 export const Navbar = () => {
@@ -9,9 +10,9 @@ export const Navbar = () => {
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img src={logo} alt="ReelEstate" className="h-10 w-auto" />
-        </div>
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logo} alt="ReelEstate" className="h-12 w-auto hover:scale-105 transition-transform" />
+        </Link>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
@@ -24,12 +25,16 @@ export const Navbar = () => {
           <a href="#about" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Hakkımızda
           </a>
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-          </Button>
-          <Button className="bg-gradient-to-r from-primary to-primary-glow">
-            Başlayın
-          </Button>
+          <Link to="/dashboard">
+            <Button variant="ghost" size="icon">
+              <User className="h-5 w-5" />
+            </Button>
+          </Link>
+          <Link to="/upload">
+            <Button className="bg-gradient-to-r from-primary to-primary-glow">
+              Başlayın
+            </Button>
+          </Link>
         </div>
 
         {/* Mobile Menu Button */}
