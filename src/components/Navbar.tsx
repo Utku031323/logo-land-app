@@ -16,15 +16,15 @@ export const Navbar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
-          <a href="#features" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+          <Link to="/features" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Özellikler
-          </a>
-          <a href="#pricing" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+          </Link>
+          <Link to="/pricing" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Fiyatlandırma
-          </a>
-          <a href="#about" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+          </Link>
+          <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Hakkımızda
-          </a>
+          </Link>
           <Link to="/dashboard">
             <Button variant="ghost" size="icon">
               <User className="h-5 w-5" />
@@ -51,15 +51,15 @@ export const Navbar = () => {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t bg-background p-4 space-y-3">
-          <a href="#features" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
+          <Link to="/features" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
             Özellikler
-          </a>
-          <a href="#pricing" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
+          </Link>
+          <Link to="/pricing" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
             Fiyatlandırma
-          </a>
-          <a href="#about" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
+          </Link>
+          <Link to="/about" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
             Hakkımızda
-          </a>
+          </Link>
           <div className="flex flex-col gap-2 pt-2">
             <Button variant="outline" className="w-full">
               <User className="mr-2 h-4 w-4" />
