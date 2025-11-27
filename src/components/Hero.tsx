@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 import heroBg from "@/assets/hero-bg.jpg";
 import logo from "@/assets/reelestate-logo.png";
 
@@ -37,13 +38,15 @@ export const Hero = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              size="lg"
-              className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-primary-glow hover:shadow-elevated transition-all"
-            >
-              Ücretsiz Deneyin
-            </Button>
-            <Button 
+            <Link to="/upload">
+              <Button
+                size="lg"
+                className="text-lg px-8 py-6 bg-gradient-to-r from-primary to-primary-glow hover:shadow-elevated transition-all"
+              >
+                Ücretsiz Deneyin
+              </Button>
+            </Link>
+            <Button
               size="lg"
               variant="outline"
               className="text-lg px-8 py-6 group"

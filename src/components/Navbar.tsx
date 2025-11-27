@@ -61,13 +61,17 @@ export const Navbar = () => {
             Hakkımızda
           </Link>
           <div className="flex flex-col gap-2 pt-2">
-            <Button variant="outline" className="w-full">
-              <User className="mr-2 h-4 w-4" />
-              Giriş Yap
-            </Button>
-            <Button className="w-full bg-gradient-to-r from-primary to-primary-glow">
-              Başlayın
-            </Button>
+            <Link to="/dashboard">
+              <Button variant="outline" className="w-full">
+                <User className="mr-2 h-4 w-4" />
+                Giriş Yap
+              </Button>
+            </Link>
+            <Link to="/upload" className="w-full">
+              <Button className="w-full bg-gradient-to-r from-primary to-primary-glow">
+                Başlayın
+              </Button>
+            </Link>
           </div>
         </div>
       )}

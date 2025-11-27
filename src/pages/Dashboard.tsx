@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Navbar } from "@/components/Navbar";
-import { 
-  Plus, 
-  Video, 
-  Eye, 
-  Share2, 
+import { Link } from "react-router-dom";
+import {
+  Plus,
+  Video,
+  Eye,
+  Share2,
   TrendingUp,
   Clock,
   CheckCircle,
@@ -82,13 +83,15 @@ const Dashboard = () => {
             <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
             <p className="text-muted-foreground">Portföylerinizi yönetin ve istatistiklerinizi görüntüleyin</p>
           </div>
-          <Button 
-            size="lg"
-            className="bg-gradient-to-r from-primary to-primary-glow hover:shadow-elevated transition-all"
-          >
-            <Plus className="mr-2 h-5 w-5" />
-            Yeni Video Oluştur
-          </Button>
+          <Link to="/upload">
+            <Button
+              size="lg"
+              className="bg-gradient-to-r from-primary to-primary-glow hover:shadow-elevated transition-all"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Yeni Video Oluştur
+            </Button>
+          </Link>
         </div>
 
         {/* Stats Grid */}
@@ -173,15 +176,17 @@ const Dashboard = () => {
 
         {/* Quick Actions */}
         <div className="grid md:grid-cols-3 gap-6 mt-8">
-          <Card className="hover:shadow-soft transition-all cursor-pointer">
-            <CardContent className="p-6 text-center space-y-3">
-              <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
-                <Plus className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold">Yeni Portföy</h3>
-              <p className="text-sm text-muted-foreground">Fotoğraf yükleyin ve video oluşturun</p>
-            </CardContent>
-          </Card>
+          <Link to="/upload">
+            <Card className="hover:shadow-soft transition-all cursor-pointer h-full">
+              <CardContent className="p-6 text-center space-y-3">
+                <div className="w-12 h-12 mx-auto rounded-full bg-primary/10 flex items-center justify-center">
+                  <Plus className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="font-semibold">Yeni Video Oluştur</h3>
+                <p className="text-sm text-muted-foreground">Fotoğraf yükleyin ve video oluşturun</p>
+              </CardContent>
+            </Card>
+          </Link>
 
           <Card className="hover:shadow-soft transition-all cursor-pointer">
             <CardContent className="p-6 text-center space-y-3">
