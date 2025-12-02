@@ -30,8 +30,7 @@ export const Footer = () => {
           <div>
             <h4 className="font-semibold mb-4">Ürün</h4>
             <ul className="space-y-3">
-              <li><a href="#features" className="text-sm text-muted-foreground hover:text-primary transition-colors">Özellikler</a></li>
-              <li><a href="#pricing" className="text-sm text-muted-foreground hover:text-primary transition-colors">Fiyatlandırma</a></li>
+              <li><a href="/upload" className="text-sm text-muted-foreground hover:text-primary transition-colors">Video Oluştur</a></li>
               <li><a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Demo</a></li>
               <li><a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">Güncellemeler</a></li>
             </ul>

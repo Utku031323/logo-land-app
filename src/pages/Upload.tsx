@@ -8,17 +8,60 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Navbar } from "@/components/Navbar";
 import { Upload as UploadIcon, X, ArrowRight, Play, Home, Download, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Player } from "@remotion/player";
+import { RealEstateVideo } from "@/video/compositions/RealEstateVideo";
+
+// API Base URL
+const API_BASE_URL = "http://localhost:3001/api";
+
+// Property data interface
+interface PropertyData {
+  title: string;
+  price: string;
+  area: string;
+  rooms: string;
+  location: string;
+  floor: string;
+  description: string;
+  propertyType: string;
+}
+
+// Generated content interface
+interface GeneratedContent {
+  script: string;
+  audioUrl: string;
+}
 
 const Upload = () => {
   const [step, setStep] = useState(1);
   const [photos, setPhotos] = useState<string[]>([]);
-  const [selectedVoice, setSelectedVoice] = useState<string>("");
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]); // Store original files for upload
+  const [selectedVoice, setSelectedVoice] = useState<string>("21m00Tcm4TlvDq8ikWAM");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("tr");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [videoReady, setVideoReady] = useState(false);
   const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string>("");
+  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  const [generationProgress, setGenerationProgress] = useState<string>("");
   const { toast } = useToast();
+
+  // Property details state
+  const [propertyData, setPropertyData] = useState<PropertyData>({
+    title: "",
+    price: "",
+    area: "",
+    rooms: "",
+    location: "",
+    floor: "",
+    description: "",
+    propertyType: "daire",
+  });
+
+  // Update property data helper
+  const updatePropertyData = (field: keyof PropertyData, value: string) => {
+    setPropertyData(prev => ({ ...prev, [field]: value }));
+  };
 
   const categories = [
     { id: "salon", label: "Salon", photos: [] as string[] },
@@ -39,8 +82,10 @@ const Upload = () => {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newPhotos = Array.from(files).map(file => URL.createObjectURL(file));
+      const fileArray = Array.from(files);
+      const newPhotos = fileArray.map(file => URL.createObjectURL(file));
       setPhotos([...photos, ...newPhotos]);
+      setPhotoFiles([...photoFiles, ...fileArray]);
       toast({
         title: "Fotoğraflar yüklendi",
         description: `${files.length} fotoğraf başarıyla yüklendi.`
@@ -50,6 +95,107 @@ const Upload = () => {
 
   const removePhoto = (index: number) => {
     setPhotos(photos.filter((_, i) => i !== index));
+    setPhotoFiles(photoFiles.filter((_, i) => i !== index));
+  };
+
+  // Convert file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
+  };
+
+  // Generate video content via API
+  const generateVideoContent = async () => {
+    setIsGenerating(true);
+    setGenerationProgress("Script hazırlanıyor...");
+
+    try {
+      // Prepare property data for API
+      const apiPayload = {
+        title: propertyData.title || "Lüks Daire",
+        location: propertyData.location || "İstanbul",
+        price: propertyData.price ? `₺${Number(propertyData.price).toLocaleString('tr-TR')}` : "₺2.500.000",
+        bedrooms: propertyData.rooms ? parseInt(propertyData.rooms.split('+')[0]) : 3,
+        bathrooms: 2,
+        area: propertyData.area ? parseInt(propertyData.area) : 150,
+        features: [
+          "Merkezi konum",
+          "Açık mutfak",
+          "Geniş balkon",
+          propertyData.floor ? `${propertyData.floor}. kat` : "Yüksek kat",
+        ],
+        propertyType: propertyData.propertyType || "daire",
+        language: selectedLanguage,
+        voiceId: selectedVoice,
+      };
+
+      console.log("API Request:", apiPayload);
+
+      // Call the backend API
+      const response = await fetch(`${API_BASE_URL}/generate-video-content`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(apiPayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Video oluşturma başarısız oldu");
+      }
+
+      setGenerationProgress("Ses dosyası oluşturuluyor...");
+
+      const data = await response.json();
+      console.log("API Response:", data);
+
+      // Store generated content
+      setGeneratedContent({
+        script: data.script,
+        audioUrl: data.audio?.url || "",
+      });
+
+      // If audio was generated, set the URL
+      if (data.audio?.url) {
+        setGeneratedVideoUrl(`${API_BASE_URL.replace('/api', '')}${data.audio.url}`);
+      }
+
+      setVideoReady(true);
+      setStep(7);
+
+      toast({
+        title: "Video başarıyla oluşturuldu!",
+        description: "Videonuz hazır. Önizleyebilir ve indirebilirsiniz.",
+      });
+
+    } catch (error) {
+      console.error("Video generation error:", error);
+
+      const errorMessage = error instanceof Error ? error.message : "Bilinmeyen bir hata oluştu";
+
+      toast({
+        title: "Hata!",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
+      // Fallback: Use mock data if API fails
+      setGeneratedContent({
+        script: "Bu muhteşem mülk, modern yaşamın tüm konforlarını sunuyor...",
+        audioUrl: "",
+      });
+      setVideoReady(true);
+      setStep(7);
+
+    } finally {
+      setIsGenerating(false);
+      setGenerationProgress("");
+    }
   };
 
   return (
@@ -278,22 +424,42 @@ const Upload = () => {
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Başlık</Label>
-                  <Input id="title" placeholder="Örn: Lüks 3+1 Daire" />
+                  <Input
+                    id="title"
+                    placeholder="Örn: Lüks 3+1 Daire"
+                    value={propertyData.title}
+                    onChange={(e) => updatePropertyData("title", e.target.value)}
+                  />
                 </div>
-                
+
                 <div className="space-y-2">
-                  <Label htmlFor="price">Fiyat</Label>
-                  <Input id="price" type="number" placeholder="Örn: 2500000" />
+                  <Label htmlFor="price">Fiyat (₺)</Label>
+                  <Input
+                    id="price"
+                    type="number"
+                    placeholder="Örn: 2500000"
+                    value={propertyData.price}
+                    onChange={(e) => updatePropertyData("price", e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="m2">Metrekare (m²)</Label>
-                  <Input id="m2" type="number" placeholder="Örn: 150" />
+                  <Input
+                    id="m2"
+                    type="number"
+                    placeholder="Örn: 150"
+                    value={propertyData.area}
+                    onChange={(e) => updatePropertyData("area", e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="rooms">Oda Sayısı</Label>
-                  <Select>
+                  <Select
+                    value={propertyData.rooms}
+                    onValueChange={(value) => updatePropertyData("rooms", value)}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Seçiniz" />
                     </SelectTrigger>
@@ -310,21 +476,34 @@ const Upload = () => {
 
                 <div className="space-y-2">
                   <Label htmlFor="location">Konum</Label>
-                  <Input id="location" placeholder="İlçe, Şehir" />
+                  <Input
+                    id="location"
+                    placeholder="İlçe, Şehir"
+                    value={propertyData.location}
+                    onChange={(e) => updatePropertyData("location", e.target.value)}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="floor">Kat</Label>
-                  <Input id="floor" type="number" placeholder="Örn: 5" />
+                  <Input
+                    id="floor"
+                    type="number"
+                    placeholder="Örn: 5"
+                    value={propertyData.floor}
+                    onChange={(e) => updatePropertyData("floor", e.target.value)}
+                  />
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="description">Açıklama</Label>
-                <Textarea 
-                  id="description" 
+                <Textarea
+                  id="description"
                   placeholder="Mülk hakkında detaylı bilgi..."
                   rows={4}
+                  value={propertyData.description}
+                  onChange={(e) => updatePropertyData("description", e.target.value)}
                 />
               </div>
 
@@ -357,7 +536,7 @@ const Upload = () => {
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>Dil Seçimi</Label>
-                  <Select>
+                  <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
                     <SelectTrigger>
                       <SelectValue placeholder="Dil seçin" />
                     </SelectTrigger>
@@ -375,18 +554,26 @@ const Upload = () => {
                   <Label>Ses Tonu</Label>
                   <div className="grid md:grid-cols-2 gap-4">
                     {[
-                      { id: "male1", label: "Erkek Ses 1", description: "Profesyonel, otoriter" },
-                      { id: "male2", label: "Erkek Ses 2", description: "Samimi, sıcak" },
-                      { id: "female1", label: "Kadın Ses 1", description: "Enerjik, dinamik" },
-                      { id: "female2", label: "Kadın Ses 2", description: "Sakin, güvenilir" },
+                      { id: "21m00Tcm4TlvDq8ikWAM", label: "Erkek Ses 1", description: "Profesyonel, otoriter" },
+                      { id: "AZnzlk1XvdvUeBnXmlld", label: "Erkek Ses 2", description: "Samimi, sıcak" },
+                      { id: "EXAVITQu4vr4xnSDxMaL", label: "Kadın Ses 1", description: "Enerjik, dinamik" },
+                      { id: "MF3mGyEYCl7XYWbV9V6O", label: "Kadın Ses 2", description: "Sakin, güvenilir" },
                     ].map((voice) => (
-                      <Card key={voice.id} className="cursor-pointer hover:border-primary transition-colors">
+                      <Card
+                        key={voice.id}
+                        className={`cursor-pointer transition-all ${
+                          selectedVoice === voice.id
+                            ? 'border-primary border-2 bg-primary/5'
+                            : 'hover:border-primary'
+                        }`}
+                        onClick={() => setSelectedVoice(voice.id)}
+                      >
                         <CardContent className="p-4">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-medium">{voice.label}</h4>
-                            <Button size="sm" variant="ghost">
-                              Dinle
-                            </Button>
+                            {selectedVoice === voice.id && (
+                              <CheckCircle className="h-5 w-5 text-primary" />
+                            )}
                           </div>
                           <p className="text-sm text-muted-foreground">{voice.description}</p>
                         </CardContent>
@@ -402,7 +589,6 @@ const Upload = () => {
                 </Button>
                 <Button
                   onClick={() => setStep(5)}
-                  disabled={!selectedVoice}
                   className="bg-gradient-to-r from-primary to-primary-glow"
                 >
                   Sonraki Adım
@@ -476,12 +662,29 @@ const Upload = () => {
                 <h3 className="font-semibold text-lg">Özet</h3>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
+                    <p className="text-sm text-muted-foreground">Mülk Başlığı</p>
+                    <p className="font-medium">{propertyData.title || "Belirtilmedi"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Fiyat</p>
+                    <p className="font-medium">{propertyData.price ? `₺${Number(propertyData.price).toLocaleString('tr-TR')}` : "Belirtilmedi"}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Konum</p>
+                    <p className="font-medium">{propertyData.location || "Belirtilmedi"}</p>
+                  </div>
+                  <div>
                     <p className="text-sm text-muted-foreground">Fotoğraf Sayısı</p>
                     <p className="font-medium">{photos.length} fotoğraf</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Seslendirme</p>
-                    <p className="font-medium">{selectedLanguage === 'tr' ? 'Türkçe' : 'İngilizce'} - {selectedVoice || 'Seçilmedi'}</p>
+                    <p className="text-sm text-muted-foreground">Seslendirme Dili</p>
+                    <p className="font-medium">
+                      {selectedLanguage === 'tr' ? 'Türkçe' :
+                       selectedLanguage === 'en' ? 'İngilizce' :
+                       selectedLanguage === 'de' ? 'Almanca' :
+                       selectedLanguage === 'ar' ? 'Arapça' : 'Rusça'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Platform</p>
@@ -491,31 +694,32 @@ const Upload = () => {
                     <p className="text-sm text-muted-foreground">Video Formatı</p>
                     <p className="font-medium">1080x1920 (9:16)</p>
                   </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Metrekare</p>
+                    <p className="font-medium">{propertyData.area ? `${propertyData.area} m²` : "Belirtilmedi"}</p>
+                  </div>
                 </div>
               </div>
 
+              {/* Generation Progress */}
+              {isGenerating && generationProgress && (
+                <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-blue-700">
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <p className="font-medium">{generationProgress}</p>
+                  </div>
+                </div>
+              )}
+
               <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(5)}>
+                <Button variant="outline" onClick={() => setStep(5)} disabled={isGenerating}>
                   Geri
                 </Button>
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-primary to-primary-glow"
                   disabled={isGenerating}
-                  onClick={() => {
-                    setIsGenerating(true);
-                    toast({
-                      title: "Video oluşturuluyor!",
-                      description: "AI videonuzu hazırlıyor. Bu işlem 2-3 dakika sürebilir."
-                    });
-                    // Simulate video generation (will be replaced with actual API call)
-                    setTimeout(() => {
-                      setIsGenerating(false);
-                      setVideoReady(true);
-                      setGeneratedVideoUrl("/sample-video.mp4"); // Mock URL
-                      setStep(7);
-                    }, 3000);
-                  }}
+                  onClick={generateVideoContent}
                 >
                   {isGenerating ? (
                     <>
@@ -547,21 +751,55 @@ const Upload = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Video Preview */}
-              <div className="bg-black rounded-lg aspect-[9/16] max-w-sm mx-auto flex items-center justify-center overflow-hidden">
+              {/* Video Preview with Remotion Player */}
+              <div className="bg-black rounded-lg max-w-sm mx-auto overflow-hidden">
                 {videoReady ? (
-                  <div className="text-center space-y-4 p-8">
-                    <Play className="h-16 w-16 text-white mx-auto opacity-80 hover:opacity-100 cursor-pointer transition-opacity" />
-                    <p className="text-white text-sm">Video önizlemesi için tıklayın</p>
-                    <p className="text-gray-400 text-xs">(Remotion Player burada gösterilecek)</p>
-                  </div>
+                  <Player
+                    component={RealEstateVideo}
+                    inputProps={{
+                      photos: photos.length > 0 ? photos : [
+                        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1080",
+                        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1080",
+                        "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1080",
+                      ],
+                      title: propertyData.title || "Lüks Daire",
+                      location: propertyData.location || "İstanbul",
+                      price: propertyData.price
+                        ? `₺${Number(propertyData.price).toLocaleString('tr-TR')}`
+                        : "₺2.500.000",
+                      audioUrl: generatedVideoUrl || undefined,
+                    }}
+                    durationInFrames={30 * 30}
+                    fps={30}
+                    compositionWidth={1080}
+                    compositionHeight={1920}
+                    style={{
+                      width: "100%",
+                      aspectRatio: "9/16",
+                    }}
+                    controls
+                    autoPlay={false}
+                    loop
+                  />
                 ) : (
-                  <div className="text-center space-y-4">
-                    <Loader2 className="h-12 w-12 text-white mx-auto animate-spin" />
-                    <p className="text-white">Yükleniyor...</p>
+                  <div className="aspect-[9/16] flex items-center justify-center">
+                    <div className="text-center space-y-4">
+                      <Loader2 className="h-12 w-12 text-white mx-auto animate-spin" />
+                      <p className="text-white">Yükleniyor...</p>
+                    </div>
                   </div>
                 )}
               </div>
+
+              {/* Generated Script Preview */}
+              {generatedContent?.script && (
+                <div className="bg-secondary/30 rounded-lg p-4">
+                  <h4 className="font-semibold mb-2">Oluşturulan Script:</h4>
+                  <p className="text-sm text-muted-foreground italic">
+                    "{generatedContent.script}"
+                  </p>
+                </div>
+              )}
 
               {/* Video Info */}
               <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
@@ -608,12 +846,25 @@ const Upload = () => {
                 <Button
                   variant="outline"
                   onClick={() => {
+                    // Reset all states for new video
                     setStep(1);
                     setPhotos([]);
-                    setSelectedVoice("");
+                    setPhotoFiles([]);
+                    setSelectedVoice("21m00Tcm4TlvDq8ikWAM");
                     setSelectedTemplate("");
                     setVideoReady(false);
                     setGeneratedVideoUrl("");
+                    setGeneratedContent(null);
+                    setPropertyData({
+                      title: "",
+                      price: "",
+                      area: "",
+                      rooms: "",
+                      location: "",
+                      floor: "",
+                      description: "",
+                      propertyType: "daire",
+                    });
                   }}
                 >
                   <Home className="mr-2 h-4 w-4" />
