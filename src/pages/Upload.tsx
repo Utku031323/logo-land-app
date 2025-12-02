@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Navbar } from "@/components/Navbar";
-import { Upload as UploadIcon, Image, X, ArrowRight, Play, Share2, BarChart3, Home } from "lucide-react";
+import { Upload as UploadIcon, X, ArrowRight, Play, Home, Download, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Upload = () => {
@@ -15,6 +15,9 @@ const Upload = () => {
   const [selectedVoice, setSelectedVoice] = useState<string>("");
   const [selectedLanguage, setSelectedLanguage] = useState<string>("tr");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [generatedVideoUrl, setGeneratedVideoUrl] = useState<string>("");
   const { toast } = useToast();
 
   const categories = [
@@ -59,15 +62,14 @@ const Upload = () => {
           {[
             { num: 1, label: "Giriş" },
             { num: 2, label: "Fotoğraflar" },
-            { num: 3, label: "Anket" },
-            { num: 4, label: "Önizleme" },
-            { num: 5, label: "Seslendirme" },
-            { num: 6, label: "Şablon" },
-            { num: 7, label: "Paylaşım" },
-            { num: 8, label: "İstatistik" }
+            { num: 3, label: "Mülk Bilgileri" },
+            { num: 4, label: "Seslendirme" },
+            { num: 5, label: "Şablon" },
+            { num: 6, label: "Oluştur" },
+            { num: 7, label: "Sonuç" }
           ].map((s, idx) => (
             <div key={s.num} className="flex items-center flex-1 min-w-max">
-              <div className={`flex flex-col items-center ${idx < 7 ? 'flex-1' : ''}`}>
+              <div className={`flex flex-col items-center ${idx < 6 ? 'flex-1' : ''}`}>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold text-sm ${
                   step >= s.num
                     ? 'bg-gradient-to-r from-primary to-primary-glow text-white'
@@ -79,7 +81,7 @@ const Upload = () => {
                   {s.label}
                 </span>
               </div>
-              {idx < 7 && (
+              {idx < 6 && (
                 <div className={`h-1 flex-1 mx-2 ${
                   step > s.num ? 'bg-gradient-to-r from-primary to-primary-glow' : 'bg-muted'
                 }`} />
@@ -342,60 +344,8 @@ const Upload = () => {
           </Card>
         )}
 
-        {/* Step 4: Video Preview */}
+        {/* Step 4: Voice Selection */}
         {step === 4 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Video Önizlemesi</CardTitle>
-              <CardDescription>
-                AI tarafından oluşturulan video önizlemesini görüntüleyin
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="bg-black rounded-lg aspect-video flex items-center justify-center">
-                <div className="text-center space-y-4">
-                  <Play className="h-16 w-16 text-white mx-auto opacity-50" />
-                  <p className="text-white text-lg">Video Önizlemesi</p>
-                  <p className="text-gray-400 text-sm">Seslendirme ve şablon seçiminden sonra görüntülenecek</p>
-                </div>
-              </div>
-
-              <div className="bg-secondary/50 rounded-lg p-6 space-y-4">
-                <h3 className="font-semibold">Video Özellikleri</h3>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Fotoğraf Sayısı</p>
-                    <p className="font-medium">{photos.length} fotoğraf</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Tahmini Süre</p>
-                    <p className="font-medium">45-60 saniye</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">Kalite</p>
-                    <p className="font-medium">4K (3840x2160)</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(3)}>
-                  Geri
-                </Button>
-                <Button
-                  onClick={() => setStep(5)}
-                  className="bg-gradient-to-r from-primary to-primary-glow"
-                >
-                  Sonraki Adım
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Step 5: Voice Selection */}
-        {step === 5 && (
           <Card>
             <CardHeader>
               <CardTitle>Seslendirme Dili ve Sesini Seçin</CardTitle>
@@ -447,11 +397,11 @@ const Upload = () => {
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(4)}>
+                <Button variant="outline" onClick={() => setStep(3)}>
                   Geri
                 </Button>
                 <Button
-                  onClick={() => setStep(6)}
+                  onClick={() => setStep(5)}
                   disabled={!selectedVoice}
                   className="bg-gradient-to-r from-primary to-primary-glow"
                 >
@@ -463,8 +413,8 @@ const Upload = () => {
           </Card>
         )}
 
-        {/* Step 6: Social Media Template Selection */}
-        {step === 6 && (
+        {/* Step 5: Social Media Template Selection */}
+        {step === 5 && (
           <Card>
             <CardHeader>
               <CardTitle>Sosyal Medya Şablonunu Seçin</CardTitle>
@@ -496,11 +446,11 @@ const Upload = () => {
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(5)}>
+                <Button variant="outline" onClick={() => setStep(4)}>
                   Geri
                 </Button>
                 <Button
-                  onClick={() => setStep(7)}
+                  onClick={() => setStep(6)}
                   disabled={!selectedTemplate}
                   className="bg-gradient-to-r from-primary to-primary-glow"
                 >
@@ -512,11 +462,11 @@ const Upload = () => {
           </Card>
         )}
 
-        {/* Step 7: Share & Generate */}
-        {step === 7 && (
+        {/* Step 6: Generate Video */}
+        {step === 6 && (
           <Card>
             <CardHeader>
-              <CardTitle>Videonuzu Oluşturun ve Paylaşın</CardTitle>
+              <CardTitle>Videonuzu Oluşturun</CardTitle>
               <CardDescription>
                 Tüm ayarlarınız hazır. Videonuzu oluşturmaya başlayın!
               </CardDescription>
@@ -531,139 +481,143 @@ const Upload = () => {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Seslendirme</p>
-                    <p className="font-medium">{selectedLanguage === 'tr' ? 'Türkçe' : 'İngilizce'} - {selectedVoice}</p>
+                    <p className="font-medium">{selectedLanguage === 'tr' ? 'Türkçe' : 'İngilizce'} - {selectedVoice || 'Seçilmedi'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Platform</p>
-                    <p className="font-medium">{selectedTemplate}</p>
+                    <p className="font-medium">{selectedTemplate || 'Seçilmedi'}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Tahmini Süre</p>
-                    <p className="font-medium">45-60 saniye</p>
+                    <p className="text-sm text-muted-foreground">Video Formatı</p>
+                    <p className="font-medium">1080x1920 (9:16)</p>
                   </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <h3 className="font-semibold">Paylaşım Seçenekleri</h3>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-secondary/50">
-                    <input type="checkbox" defaultChecked className="w-4 h-4" />
-                    <span>Video oluşturulduktan sonra otomatik olarak paylaş</span>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-secondary/50">
-                    <input type="checkbox" className="w-4 h-4" />
-                    <span>Paylaşım sonrası istatistikleri göster</span>
-                  </label>
                 </div>
               </div>
 
               <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => setStep(6)}>
+                <Button variant="outline" onClick={() => setStep(5)}>
                   Geri
                 </Button>
                 <Button
                   size="lg"
                   className="bg-gradient-to-r from-primary to-primary-glow"
+                  disabled={isGenerating}
                   onClick={() => {
+                    setIsGenerating(true);
                     toast({
                       title: "Video oluşturuluyor!",
-                      description: "Videonuz 2-3 dakika içinde hazır olacak."
+                      description: "AI videonuzu hazırlıyor. Bu işlem 2-3 dakika sürebilir."
                     });
-                    setStep(8);
+                    // Simulate video generation (will be replaced with actual API call)
+                    setTimeout(() => {
+                      setIsGenerating(false);
+                      setVideoReady(true);
+                      setGeneratedVideoUrl("/sample-video.mp4"); // Mock URL
+                      setStep(7);
+                    }, 3000);
                   }}
                 >
-                  <Share2 className="mr-2 h-4 w-4" />
-                  Video Oluştur ve Paylaş
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Oluşturuluyor...
+                    </>
+                  ) : (
+                    <>
+                      <Play className="mr-2 h-4 w-4" />
+                      Video Oluştur
+                    </>
+                  )}
                 </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Step 8: Statistics & Dashboard */}
-        {step === 8 && (
+        {/* Step 7: Result Screen */}
+        {step === 7 && (
           <Card>
             <CardHeader>
-              <CardTitle>Video İstatistikleri</CardTitle>
+              <CardTitle className="flex items-center gap-2">
+                <CheckCircle className="h-6 w-6 text-green-500" />
+                Videonuz Hazır!
+              </CardTitle>
               <CardDescription>
-                Videonuzun performansını izleyin
+                Videonuz başarıyla oluşturuldu. İndirebilir veya önizleyebilirsiniz.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Video Preview */}
+              <div className="bg-black rounded-lg aspect-[9/16] max-w-sm mx-auto flex items-center justify-center overflow-hidden">
+                {videoReady ? (
+                  <div className="text-center space-y-4 p-8">
+                    <Play className="h-16 w-16 text-white mx-auto opacity-80 hover:opacity-100 cursor-pointer transition-opacity" />
+                    <p className="text-white text-sm">Video önizlemesi için tıklayın</p>
+                    <p className="text-gray-400 text-xs">(Remotion Player burada gösterilecek)</p>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <Loader2 className="h-12 w-12 text-white mx-auto animate-spin" />
+                    <p className="text-white">Yükleniyor...</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Video Info */}
               <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4">
-                <p className="text-green-700 font-medium">✓ Video başarıyla oluşturuldu ve paylaşıldı!</p>
-              </div>
-
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground mb-2">Görüntülenme</p>
-                    <p className="text-2xl font-bold">1,240</p>
-                    <p className="text-xs text-green-600 mt-2">↑ 18% bu gün</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground mb-2">Beğeni</p>
-                    <p className="text-2xl font-bold">156</p>
-                    <p className="text-xs text-green-600 mt-2">↑ 24% bu gün</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground mb-2">Yorum</p>
-                    <p className="text-2xl font-bold">42</p>
-                    <p className="text-xs text-green-600 mt-2">↑ 12% bu gün</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <p className="text-sm text-muted-foreground mb-2">Paylaşım</p>
-                    <p className="text-2xl font-bold">28</p>
-                    <p className="text-xs text-green-600 mt-2">↑ 8% bu gün</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="space-y-4">
-                <h3 className="font-semibold">Platform Performansı</h3>
-                <div className="space-y-3">
-                  {socialTemplates.map((template) => (
-                    <div key={template.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <span className="font-medium capitalize">{template.label}</span>
-                      <div className="flex items-center gap-4">
-                        <div className="text-right">
-                          <p className="font-semibold">2.5K</p>
-                          <p className="text-xs text-muted-foreground">görüntülenme</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className="flex items-center gap-2 text-green-700 font-medium">
+                  <CheckCircle className="h-5 w-5" />
+                  Video başarıyla oluşturuldu!
                 </div>
+                <p className="text-sm text-green-600 mt-1">
+                  Süre: 30 saniye • Format: MP4 • Çözünürlük: 1080x1920
+                </p>
               </div>
 
-              <div className="flex justify-between pt-4">
-                <Button variant="outline" onClick={() => {
-                  setStep(1);
-                  setPhotos([]);
-                  setSelectedVoice("");
-                  setSelectedTemplate("");
-                }}>
-                  <Home className="mr-2 h-4 w-4" />
-                  Yeni Video Oluştur
-                </Button>
+              {/* Action Buttons */}
+              <div className="grid grid-cols-2 gap-4">
                 <Button
+                  size="lg"
+                  variant="outline"
                   onClick={() => {
                     toast({
-                      title: "Dashboard'a yönlendiriliyorsunuz",
-                      description: "Tüm videolarınızı görmek için dashboard'a gidin"
+                      title: "Video oynatılıyor",
+                      description: "Video önizlemesi açılıyor..."
                     });
                   }}
-                  className="bg-gradient-to-r from-primary to-primary-glow"
                 >
-                  <BarChart3 className="mr-2 h-4 w-4" />
-                  Dashboard'a Git
+                  <Play className="mr-2 h-4 w-4" />
+                  Önizle
+                </Button>
+                <Button
+                  size="lg"
+                  className="bg-gradient-to-r from-primary to-primary-glow"
+                  onClick={() => {
+                    toast({
+                      title: "İndirme başlatıldı",
+                      description: "Videonuz indiriliyor..."
+                    });
+                  }}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Videoyu İndir
+                </Button>
+              </div>
+
+              <div className="flex justify-between pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setStep(1);
+                    setPhotos([]);
+                    setSelectedVoice("");
+                    setSelectedTemplate("");
+                    setVideoReady(false);
+                    setGeneratedVideoUrl("");
+                  }}
+                >
+                  <Home className="mr-2 h-4 w-4" />
+                  Yeni Video Oluştur
                 </Button>
               </div>
             </CardContent>

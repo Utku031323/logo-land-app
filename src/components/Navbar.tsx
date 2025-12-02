@@ -16,12 +16,6 @@ export const Navbar = () => {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-6">
-          <Link to="/features" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            Özellikler
-          </Link>
-          <Link to="/pricing" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            Fiyatlandırma
-          </Link>
           <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
             Hakkımızda
           </Link>
@@ -51,12 +45,6 @@ export const Navbar = () => {
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t bg-background p-4 space-y-3">
-          <Link to="/features" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
-            Özellikler
-          </Link>
-          <Link to="/pricing" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
-            Fiyatlandırma
-          </Link>
           <Link to="/about" className="block py-2 text-sm font-medium hover:text-primary transition-colors">
             Hakkımızda
           </Link>
@@ -64,7 +52,7 @@ export const Navbar = () => {
             <Link to="/dashboard">
               <Button variant="outline" className="w-full">
                 <User className="mr-2 h-4 w-4" />
-                Giriş Yap
+                Dashboard
               </Button>
             </Link>
             <Link to="/upload" className="w-full">
